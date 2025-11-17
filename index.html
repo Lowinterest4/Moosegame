@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Catch the Moose</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="container">
+    <header>
+      <h1>Catch the Moose 🦌</h1>
+      <p class="subtitle">Click the moose to score! How many can you catch in 30 seconds?</p>
+    </header>
+
+    <section class="hud">
+      <div>Score: <span id="score">0</span></div>
+      <div>Time: <span id="time">30</span>s</div>
+      <div><button id="startBtn">Start Game</button></div>
+    </section>
+
+    <section id="arena" class="arena" aria-label="game arena">
+      <!-- moose inserted by JS -->
+    </section>
+
+    <footer class="controls">
+      <label>
+        Duration:
+        <select id="duration">
+          <option value="15">15s</option>
+          <option value="30" selected>30s</option>
+          <option value="60">60s</option>
+        </select>
+      </label>
+      <label>
+        Moose size:
+        <select id="size">
+          <option value="48">Small</option>
+          <option value="64" selected>Medium</option>
+          <option value="96">Large</option>
+        </select>
+      </label>
+    </footer>
+
+    <div id="message" class="message hidden"></div>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
