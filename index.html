@@ -3,48 +3,335 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Catch the Moose</title>
-  <link rel="stylesheet" href="styles.css">
+  <title>Moose Master — Web Card Game (Playable)</title>
+  <style>
+    :root{--bg:#f2f7fb;--card:#fff;--accent:#2a7ae2;--danger:#e25a5a;--muted:#586075}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial;background:linear-gradient(180deg,var(--bg),#eef4ff);color:#172033;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:18px}
+    .app{width:100%;max-width:1100px;background:var(--card);border-radius:12px;padding:18px;box-shadow:0 12px 40px rgba(20,30,70,0.08)}
+    header{display:flex;align-items:center;gap:18px}
+    header h1{margin:0;font-size:1.3rem}
+    .controls{display:flex;gap:10px;margin-left:auto;align-items:center}
+    .controls button, .controls select{padding:8px 10px;border-radius:8px;border:0;background:var(--accent);color:white;cursor:pointer}
+    .layout{display:grid;grid-template-columns:360px 1fr;gap:14px;margin-top:14px}
+    .panel{background:linear-gradient(180deg,#fff,#fbfdff);padding:12px;border-radius:10px;border:1px solid rgba(30,40,80,0.04)}
+    .deck{display:flex;flex-direction:column;gap:10px}
+    .deck .card-brief{display:flex;align-items:center;gap:10px}
+    .pile{width:80px;height:110px;border-radius:8px;background:linear-gradient(180deg,#2a7ae2,#1f62c8);color:white;display:flex;align-items:center;justify-content:center;font-weight:700;box-shadow:0 8px 18px rgba(40,80,180,0.12)}
+    .pile.empty{background:linear-gradient(180deg,#e9eefc,#f6fbff);color:var(--muted);font-weight:600;border:1px dashed rgba(20,30,80,0.06)}
+    .info{font-size:0.95rem}
+    .players{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+    .player{display:flex;align-items:center;justify-content:space-between;padding:8px;border-radius:8px;background:linear-gradient(180deg,#fff,#fbfdff);border:1px solid rgba(30,40,80,0.03)}
+    .board{padding:12px;min-height:420px}
+    .hand{display:flex;gap:8px;flex-wrap:wrap}
+    .card{width:140px;min-height:90px;border-radius:8px;padding:8px;background:linear-gradient(180deg,#fff,#f8fcff);box-shadow:0 6px 18px rgba(30,40,80,0.04);border:1px solid rgba(20,30,80,0.04);cursor:pointer}
+    .card .title{font-weight:700;margin-bottom:6px}
+    .center-area{display:flex;flex-direction:column;gap:10px}
+    .log{max-height:160px;overflow:auto;padding:8px;border-radius:8px;background:#fbfdff;border:1px solid rgba(20,30,80,0.03)}
+    .big-card{height:180px;border-radius:10px;padding:12px;background:linear-gradient(180deg,#fff,#f3f9ff);border:1px solid rgba(20,30,80,0.04)}
+    footer{margin-top:12px;text-align:center;color:var(--muted);font-size:0.9rem}
+    .btn{padding:8px 10px;border-radius:8px;border:0;background:var(--accent);color:white;cursor:pointer}
+    .btn.secondary{background:#e6eefc;color:var(--accent);border:1px solid rgba(40,80,180,0.06)}
+    .flex{display:flex;gap:10px;align-items:center}
+    .muted{color:var(--muted)}
+    .success{color:green}
+    .danger{color:var(--danger)}
+    @media (max-width:920px){.layout{grid-template-columns:1fr;}.controls{margin-left:0}}
+  </style>
 </head>
 <body>
-  <main class="container">
+  <div class="app">
     <header>
-      <h1>Catch the Moose 🦌</h1>
-      <p class="subtitle">Click the moose to score! How many can you catch in 30 seconds?</p>
+      <h1>Moose Master — Web Card Game (Local)</h1>
+      <div class="controls">
+        <label class="muted">Players
+          <select id="playerCount">
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4" selected>4</option>
+          </select>
+        </label>
+        <button id="setupBtn" class="btn">Setup Game</button>
+        <button id="drawBtn" class="btn secondary">Draw Card</button>
+      </div>
     </header>
 
-    <section class="hud">
-      <div>Score: <span id="score">0</span></div>
-      <div>Time: <span id="time">30</span>s</div>
-      <div><button id="startBtn">Start Game</button></div>
-    </section>
+    <div class="layout">
+      <aside class="panel">
+        <div class="deck">
+          <div class="card-brief">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+              <div class="pile" id="masterPile">Master<br>44</div>
+              <div class="muted">Master Deck</div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:6px;margin-left:12px">
+              <div class="pile" id="penaltyPile">Penalty<br>46</div>
+              <div class="muted">Penalty Deck</div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:6px;margin-left:12px">
+              <div class="pile" id="rulesPile">Rules<br>20</div>
+              <div class="muted">Rules Deck</div>
+            </div>
+          </div>
 
-    <section id="arena" class="arena" aria-label="game arena">
-      <!-- moose inserted by JS -->
-    </section>
+          <div class="info">
+            <p><strong>How to play (digital simplified):</strong></p>
+            <ol>
+              <li>Click <strong>Setup Game</strong> to create players and shuffle decks.</li>
+              <li>On your turn click <strong>Draw Card</strong> to draw from the Master deck.</li>
+              <li>Follow the card text. Some cards will ask for a quick-click challenge; others will pass the turn or give/receive penalty cards.</li>
+              <li>Game ends when Master deck is empty. Player with most points wins.</li>
+            </ol>
+          </div>
 
-    <footer class="controls">
-      <label>
-        Duration:
-        <select id="duration">
-          <option value="15">15s</option>
-          <option value="30" selected>30s</option>
-          <option value="60">60s</option>
-        </select>
-      </label>
-      <label>
-        Moose size:
-        <select id="size">
-          <option value="48">Small</option>
-          <option value="64" selected>Medium</option>
-          <option value="96">Large</option>
-        </select>
-      </label>
+          <div class="players" id="players"></div>
+        </div>
+      </aside>
+
+      <main class="panel board">
+        <div class="center-area">
+          <div class="flex">
+            <div style="flex:1">
+              <div class="big-card" id="currentCard">
+                <div style="font-weight:800" id="cardTitle">—</div>
+                <div id="cardText" class="muted">Draw a Master card to begin.</div>
+              </div>
+            </div>
+            <div style="width:220px">
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <div class="log" id="log">Game log...</div>
+                <div style="display:flex;gap:8px;justify-content:space-between">
+                  <button id="attemptBtn" class="btn">Attempt</button>
+                  <button id="passBtn" class="btn secondary">Pass</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <section>
+            <h3>Player Hand / Penalties</h3>
+            <div id="handArea" class="hand"></div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <footer>
+      This is a simplified digital version to play locally. Let me know which rules or cards you want to tweak or add.
     </footer>
+  </div>
 
-    <div id="message" class="message hidden"></div>
-  </main>
+  <script>
+  // Simple Moose Master web game
+  // Deck definitions (simplified & editable)
+  const MASTER_CARD_DEFAULT = [
+    {id:'thumb',name:'Thumb Master',type:'challenge',desc:'Be the first to click the "Attempt" button when active. Fast-click challenge.',difficulty:0.55,points:2},
+    {id:'rhyme',name:'Rhyme Time',type:'challenge',desc:'Give a rhyme for a word. Simulated quick challenge.',difficulty:0.6,points:2},
+    {id:'name',name:'Name Game',type:'challenge',desc:'Name something in a category.',difficulty:0.6,points:2},
+    {id:'echo',name:'Echo Master',type:'challenge',desc:'Echo the phrase quickly (simulated).',difficulty:0.5,points:1},
+    {id:'rock',name:'Rock Paper Scissors',type:'mini',desc:'Quick win/lose RPS simulated.',difficulty:0.5,points:1},
+    {id:'story',name:'Story Time',type:'mini',desc:'Add a sentence to a story. Simulated success.',difficulty:0.5,points:1},
+    {id:'question',name:'Question Master',type:'mini',desc:'Ask a question. Players answer.',difficulty:0.5,points:1},
+    {id:'moose',name:'Moose Master',type:'special',desc:'A special rule — draw a Rules card and apply.',difficulty:0.0,points:0}
+  ];
 
-  <script src="script.js"></script>
+  // We'll produce counts to reach ~44 cards by repeating types
+  function generateMasterDeck(){
+    const deck = [];
+    // add repeats
+    addRepeat(deck,'thumb',8);
+    addRepeat(deck,'rhyme',6);
+    addRepeat(deck,'name',6);
+    addRepeat(deck,'echo',4);
+    addRepeat(deck,'rock',4);
+    addRepeat(deck,'story',6);
+    addRepeat(deck,'question',6);
+    addRepeat(deck,'moose',4);
+    return deck.map((k,i)=> ({uid:i+1, key:k, ...CARD_LIBRARY[k]}));
+  }
+
+  function addRepeat(arr,key,n){ for(let i=0;i<n;i++) arr.push(key); }
+
+  // Penalty deck
+  function generatePenaltyDeck(){
+    const arr=[]; for(let i=0;i<19;i++) arr.push({id:'bonus'+i,name:'Bonus!',type:'bonus',desc:'Keep for scoring (+1)'});
+    for(let i=0;i<19;i++) arr.push({id:'bummer'+i,name:'Bummer!',type:'bummer',desc:'Penalty card - lose 1 point if held at end.'});
+    for(let i=0;i<8;i++) arr.push({id:'lucky'+i,name:'Lucky Day!',type:'lucky',desc:'Neutral/hold.'});
+    return arr.map((c,i)=>({uid:i+1,...c}));
+  }
+
+  function generateRulesDeck(){
+    const arr=[]; for(let i=0;i<18;i++) arr.push({id:'rule'+i,name:'Rule #'+(i+1),type:'rule',desc:'A fun rule for this round.'});
+    arr.push({id:'blank1',name:'Blank',type:'rule',desc:'Blank - create your own rule.'});
+    arr.push({id:'blank2',name:'Blank',type:'rule',desc:'Blank - create your own rule.'});
+    return arr.map((c,i)=>({uid:i+1,...c}));
+  }
+
+  // card library for lookup
+  const CARD_LIBRARY = {
+    thumb:{id:'thumb',name:'Thumb Master',type:'challenge',desc:'Be the first to click the Attempt button when active. Fast-click challenge.',difficulty:0.55,points:2},
+    rhyme:{id:'rhyme',name:'Rhyme Time',type:'challenge',desc:'Give a rhyme for a word. Simulated quick challenge.',difficulty:0.6,points:2},
+    name:{id:'name',name:'Name Game',type:'challenge',desc:'Name something in a category.',difficulty:0.6,points:2},
+    echo:{id:'echo',name:'Echo Master',type:'challenge',desc:'Echo the phrase quickly (simulated).',difficulty:0.5,points:1},
+    rock:{id:'rock',name:'Rock Paper Scissors',type:'mini',desc:'Quick win/lose RPS simulated.',difficulty:0.5,points:1},
+    story:{id:'story',name:'Story Time',type:'mini',desc:'Add a sentence to a story. Simulated success.',difficulty:0.5,points:1},
+    question:{id:'question',name:'Question Master',type:'mini',desc:'Ask a question. Players answer.',difficulty:0.5,points:1},
+    moose:{id:'moose',name:'Moose Master',type:'special',desc:'Draw a Rules card and apply.',difficulty:0.0,points:0}
+  };
+
+  // Game state
+  let masterDeck = [];
+  let penaltyDeck = [];
+  let rulesDeck = [];
+  let discard = [];
+  let currentCard = null;
+  let players = [];
+  let currentPlayerIndex = 0;
+
+  // UI refs
+  const setupBtn = document.getElementById('setupBtn');
+  const drawBtn = document.getElementById('drawBtn');
+  const logEl = document.getElementById('log');
+  const playersEl = document.getElementById('players');
+  const cardTitle = document.getElementById('cardTitle');
+  const cardText = document.getElementById('cardText');
+  const handArea = document.getElementById('handArea');
+  const attemptBtn = document.getElementById('attemptBtn');
+  const passBtn = document.getElementById('passBtn');
+
+  function shuffle(a){
+    for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}
+    return a;
+  }
+
+  function setupGame(){
+    const pcount = Number(document.getElementById('playerCount').value);
+    masterDeck = generateMasterDeck();
+    penaltyDeck = generatePenaltyDeck();
+    rulesDeck = generateRulesDeck();
+    shuffle(masterDeck); shuffle(penaltyDeck); shuffle(rulesDeck);
+    discard = [];
+    players = [];
+    for(let i=0;i<pcount;i++) players.push({id:i+1,name:'Player '+(i+1),score:0,penalties:[]});
+    currentPlayerIndex = 0;
+    renderPlayers();
+    log('Game set up with '+pcount+' players. Deck sizes: Master '+masterDeck.length+', Penalty '+penaltyDeck.length+', Rules '+rulesDeck.length);
+    updatePiles();
+    clearCurrentCard();
+  }
+
+  function updatePiles(){
+    document.getElementById('masterPile').innerHTML = `Master<br>${masterDeck.length}`;
+    document.getElementById('penaltyPile').innerHTML = `Penalty<br>${penaltyDeck.length}`;
+    document.getElementById('rulesPile').innerHTML = `Rules<br>${rulesDeck.length}`;
+  }
+
+  function renderPlayers(){
+    playersEl.innerHTML='';
+    players.forEach((p,idx)=>{
+      const el = document.createElement('div'); el.className='player';
+      el.innerHTML = `<div><strong>${p.name}</strong> ${idx===currentPlayerIndex?'<span class="muted">(current)</span>':''}</div><div>Score: <strong>${p.score}</strong></div>`;
+      playersEl.appendChild(el);
+    });
+    renderHand();
+  }
+
+  function log(txt){
+    const time = new Date().toLocaleTimeString();
+    logEl.innerHTML = `<div>[${time}] ${txt}</div>` + logEl.innerHTML;
+  }
+
+  function drawMaster(){
+    if(masterDeck.length===0){log('Master deck empty — game over.'); endGame(); return null}
+    return masterDeck.shift();
+  }
+
+  function drawPenalty(){ if(penaltyDeck.length===0) {return null} return penaltyDeck.shift(); }
+  function drawRules(){ if(rulesDeck.length===0) return null; return rulesDeck.shift(); }
+
+  function clearCurrentCard(){ currentCard=null; cardTitle.textContent='—'; cardText.textContent='Draw a Master card to begin.'; }
+
+  function onDraw(){
+    if(players.length===0){alert('Setup game first');return}
+    const card = drawMaster();
+    if(!card) return;
+    currentCard = card;
+    const lib = CARD_LIBRARY[card.key];
+    cardTitle.textContent = lib.name + (card.uid?(' #' + card.uid):'');
+    cardText.textContent = lib.desc;
+    log(players[currentPlayerIndex].name + ' drew ' + lib.name);
+    updatePiles();
+  }
+
+  // Attempt resolves via either quick manual click (simulated) or random chance
+  function onAttempt(){
+    if(!currentCard){alert('Draw a card first');return}
+    const player = players[currentPlayerIndex];
+    const lib = CARD_LIBRARY[currentCard.key];
+    // if special moose -> draw rules card
+    if(lib.id==='moose'){
+      const r = drawRules();
+      if(r){ log(player.name + ' drew Rules card: '+r.name); cardText.textContent = 'RULE: '+r.name+' — '+r.desc; player.score+=1; log(player.name+' gains +1 for applying rule.'); }
+      else { log('No rules left.'); }
+      endTurn(); return;
+    }
+
+    // Simulate a quick-challenge: player must click Attempt then a random check
+    // Provide a short 2s window where clicking Attempt again counts as "fast" (we'll simulate with timestamp)
+    const chance = lib.difficulty || 0.5;
+    // For interactivity: use a quick-click mechanic: disable attempt, wait a tiny bit, then resolve
+    attemptBtn.disabled = true; passBtn.disabled = true;
+    cardText.textContent = lib.desc + ' — resolving...';
+    setTimeout(()=>{
+      const success = Math.random() < (1 - chance + 0.25); // tuned to give reasonable wins
+      if(success){ player.score += lib.points; log(player.name + ' succeeded! +' + lib.points + ' points.'); }
+      else { log(player.name + ' failed. Drawing a penalty card.'); const pen = drawPenalty(); if(pen){ player.penalties.push(pen); log(player.name+' received penalty: '+pen.name); } }
+      attemptBtn.disabled = false; passBtn.disabled = false; updatePiles(); renderPlayers(); renderHand(); endTurn();
+    }, 800 + Math.random()*800);
+  }
+
+  function onPass(){ if(!currentCard){alert('Draw first');return} log(players[currentPlayerIndex].name+' passed.'); // maybe draw penalty as cost? no
+    endTurn(); }
+
+  function endTurn(){
+    discard.push(currentCard);
+    currentCard = null;
+    clearCurrentCard();
+    currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
+    renderPlayers();
+    updatePiles();
+  }
+
+  function renderHand(){
+    handArea.innerHTML='';
+    const p = players[currentPlayerIndex];
+    if(!p) return;
+    // show penalties held
+    if(p.penalties.length===0){ handArea.innerHTML = '<div class="muted">No penalty cards</div>'; return; }
+    p.penalties.forEach(pc=>{
+      const el = document.createElement('div'); el.className='card'; el.innerHTML = `<div class="title">${pc.name}</div><div class="muted">${pc.desc}</div>`; handArea.appendChild(el);
+    });
+  }
+
+  function endGame(){
+    // compute final scores (bonus +/- bummer)
+    players.forEach(p=>{
+      p.penalties.forEach(card=>{ if(card.type==='bonus') p.score += 1; if(card.type==='bummer') p.score -= 1; });
+    });
+    const sorted = [...players].sort((a,b)=>b.score-a.score);
+    log('Game over! Winner: '+sorted[0].name+' with '+sorted[0].score+' points.');
+    alert('Game over! Winner: '+sorted[0].name+' with '+sorted[0].score+' points. See log for details.');
+    updatePiles(); renderPlayers(); renderHand();
+  }
+
+  // Event wiring
+  setupBtn.addEventListener('click', setupGame);
+  drawBtn.addEventListener('click', onDraw);
+  attemptBtn.addEventListener('click', onAttempt);
+  passBtn.addEventListener('click', onPass);
+
+  // Auto-setup on load
+  setupGame();
+  </script>
 </body>
 </html>
