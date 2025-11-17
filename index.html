@@ -20,7 +20,7 @@
       flex-wrap: wrap;
       margin-top: 20px;
     }
-    .deck, .players {
+    .deck, .players, .drawn-area {
       border: 2px solid #333;
       border-radius: 10px;
       padding: 15px;
@@ -51,6 +51,14 @@
       padding: 10px;
       border-radius: 5px;
     }
+    .draw-list {
+      max-height: 150px;
+      overflow-y: auto;
+      border: 1px solid #ccc;
+      padding: 5px;
+      background: #fafafa;
+      border-radius: 5px;
+    }
   </style>
 </head>
 <body>
@@ -73,6 +81,20 @@
     <h2>Players</h2>
     <div id="playersContainer"></div>
     <button onclick="addPlayer()">Add Player</button>
+  </div>
+
+  <!-- Drawn Cards Section -->
+  <div class="drawn-area">
+    <h2>Drawn Cards</h2>
+
+    <strong>Main Deck:</strong>
+    <div id="mainDrawn" class="draw-list"></div>
+
+    <strong>Penalty Deck:</strong>
+    <div id="penaltyDrawn" class="draw-list"></div>
+
+    <strong>Moose Rules Deck:</strong>
+    <div id="rulesDrawn" class="draw-list"></div>
   </div>
 
 </div>
@@ -110,23 +132,27 @@
   // Players Array
   const players = [];
 
-  // Utility: Shuffle deck
-  function shuffle(deck) {
-    return deck.sort(() => Math.random() - 0.5);
-  }
-
   // Draw a card
   function drawCard(deckType) {
     let card;
+
     if(deckType === 'main') card = mainDeck.splice(Math.floor(Math.random()*mainDeck.length), 1)[0];
     if(deckType === 'penalty') card = penaltyDeck.splice(Math.floor(Math.random()*penaltyDeck.length), 1)[0];
     if(deckType === 'rules') card = rulesDeck.splice(Math.floor(Math.random()*rulesDeck.length), 1)[0];
 
     if(card) {
       document.getElementById('drawnCard').innerText = `Drawn Card: ${card}`;
+      addToDrawnList(deckType, card);
     } else {
       document.getElementById('drawnCard').innerText = 'No cards left!';
     }
+  }
+
+  // Display drawn card in appropriate list
+  function addToDrawnList(type, card) {
+    if(type === 'main') document.getElementById('mainDrawn').innerHTML += `<div>${card}</div>`;
+    if(type === 'penalty') document.getElementById('penaltyDrawn').innerHTML += `<div>${card}</div>`;
+    if(type === 'rules') document.getElementById('rulesDrawn').innerHTML += `<div>${card}</div>`;
   }
 
   // Add Player
